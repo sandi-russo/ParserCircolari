@@ -1,151 +1,118 @@
 <?php
 
-// LIBRERIE
 
+// Connessione al database
+$servername = "localhost";
+$username = "vtmod";
+$password = "";
+$dbname = "my_vtmod";
+
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Verifica la connessione
+if ($conn->connect_error) {
+    die("Connessione al database fallita: " . $conn->connect_error);
+}
+
+// Crea la tabella circolari se non esiste già
+$sql = "CREATE TABLE IF NOT EXISTS circolari (
+    id INT(11) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    numero VARCHAR(50) NOT NULL,
+    descrizione TEXT NOT NULL,
+    data varchar(50) NOT NULL,
+    link VARCHAR(255) NOT NULL
+)";
+
+if ($conn->query($sql) !== TRUE) {
+    echo "Errore durante la creazione della tabella circolari: " . $conn->error;
+}
+
+// Include il file "index.php" per ottenere l'array delle circolari
 include_once('index.php');
 
+// Verifica quali circolari sono presenti nell'array ma non nel database
+$nuove_circolari = array();
 
-// CONTROLLO CIRCOLARI
+foreach ($circolare as $c) {
+    $numero = mysqli_real_escape_string($conn, $c['numero']);
+    $sql = "SELECT numero FROM circolari WHERE numero = '$numero'";
+    $result = $conn->query($sql);
 
-// Controllo se la richiesta viene fatta dal server o dall'utente
+    if ($result->num_rows === 0) {
+        $nuove_circolari[] = $c;
+    }
+}
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-	session_start();
-	if (!isset($_SESSION['message_sent'])) {
-		$_SESSION['message_sent'] = false;
-	}
+// Se sono state trovate nuove circolari, aggiungile al database e invia un messaggio a tutti gli utenti
+if (!empty($nuove_circolari)) {
 
-	if (!$_SESSION['message_sent']) {
+    $nrpersone = 0;
 
-		$conn = mysqli_connect('localhost', 'vtmod', '', 'my_vtmod');
-		// Seleziona solo la colonna "chatID" dalla tabella "utenti"
-		$sql = "SELECT chatID FROM utenti";
-		$result = $conn->query($sql);
+    $nuove_circolari = array_reverse($nuove_circolari);
+    foreach ($nuove_circolari as $c) {
+        // Aggiungi la nuova circolare al database
+        $numero = mysqli_real_escape_string($conn, $c['numero']);
+        $descrizione = mysqli_real_escape_string($conn, $c['descrizione']);
+        $data = mysqli_real_escape_string($conn, $c['data']);
+        $link = mysqli_real_escape_string($conn, $c['link']);
 
-		// Itera i risultati della query e salva i dati in un array
-		$chatID = array();
-		if ($result->num_rows > 0) {
-			while ($row = $result->fetch_assoc()) {
-				$chatID[] = $row['chatID'];
-			}
-		}
-
-		$botToken = "6056287611:AAFZoCB83drny4Cep2SLbV6vFuH7EWUu3Ks";
-		$website = "https://api.telegram.org/bot" . $botToken;
-			// Apro e decodifico il file 'circolari.txt'
-			$file_data = json_decode(file_get_contents('circolari.txt'), true);
-
-			// Creo due array, uno per le circolari aggiunte e uno per quelle rimosse
-			$circolari_aggiunte = array();
-			$circolari_rimosse = array();
-
-			// Se una circolare si trova sul sito ma non sul file txt, lo aggiunge nell'arrey delle circolari aggiunte
-			foreach ($circolare as $c) {
-				if (!in_array($c, $file_data)) {
-					$circolari_aggiunte[] = $c;
-				}
-			}
-
-			// Se una circolare si trova sul file ma non sul sito, lo aggiunge nell'array delle circolari rimosse
-			foreach ($file_data as $c) {
-				if (!in_array($c, $circolare)) {
-					$circolari_rimosse[] = $c;
-				}
-			}
-
-			if (!empty($circolari_aggiunte)) {
-				$numero_circolari = array_column($circolari_aggiunte, 'numero');
-				array_multisort($numero_circolari, SORT_ASC, $circolari_aggiunte);
-			}
-			
-
-			// Stampo il messaggio per le nuove circolari
-			if (!empty($circolari_aggiunte)) {
-				$messaggio = "";
-				foreach ($circolari_aggiunte as $c) {
-					$messaggio = "<b>Nuova circolare</b>: "
-						. "\nNumero: " . $c["numero"]
-						. "\n\nDescrizione: " . $c["descrizione"]
-						. "\n\nData: " . $c["data"] . "\n\n";
-
-					echo "<b>Nuova circolare</b>: "
-						. "<br>Numero: " . $c["numero"]
-						. "<br>Link: " . $c["link"]
-						. "<br>Descrizione: " . $c["descrizione"]
-						. "<br>Data: " . $c["data"] . "<br><br>";;
-
-
-						foreach ($chatID as $id) {
-							$path_to_pdf = "circolari/Circolare - " . $c["numero"] . ".pdf"; // percorso al file PDF
-							$curl = curl_init();
-							curl_setopt_array($curl, array(
-								CURLOPT_URL => $website . "/sendDocument",
-								CURLOPT_POST => true,
-								CURLOPT_POSTFIELDS => array(
-									"chat_id" => $id,
-									"document" => new CURLFile($path_to_pdf),
-									"caption" => $messaggio,
-									"parse_mode" => "HTML"
-								),
-								CURLOPT_RETURNTRANSFER => true
-							));
-							$response = curl_exec($curl);
-							$err = curl_error($curl);
-						
-							curl_close($curl);
-						
-							/*if ($err) {
-								echo "cURL Error #:" . $err;
-							} else {
-								echo $response;
-							}*/
-						}
-				}
-			}
-
-
-			// Stampo il messaggio per le circolari rimosse
-			if (!empty($circolari_rimosse)) {
-				foreach ($circolari_rimosse as $rc) {
-					$messaggio = "<b>Circolare rimossa</b>:"
-                    . "\nNumero: <b>" . $rc["numero"] . "</b>\n";
-
-					echo "<b>Circolare rimossa</b>:<br>Numero: <b>" . $rc["numero"] . "</b><br>";
-
-                    foreach ($chatID as $id) {
-						$curl = curl_init();
-						curl_setopt_array($curl, array(
-							CURLOPT_URL => $website . "/sendMessage",
-							CURLOPT_POST => true,
-							CURLOPT_POSTFIELDS => array(
-								"chat_id" => $id,
-								"text" => $messaggio,
-								"parse_mode" => "HTML"
-							),
-							CURLOPT_RETURNTRANSFER => true
-						));
-						$response = curl_exec($curl);
-						$err = curl_error($curl);
-					
-						curl_close($curl);
-					
-						/*if ($err) {
-							echo "cURL Error #:" . $err;
-						} else {
-							echo $response;
-						}*/
-					}
-			}
+        $sql = "INSERT INTO circolari (numero, descrizione, data, link) VALUES ('$numero', '$descrizione', '$data', '$link')";
+        if ($conn->query($sql) !== TRUE) {
+            echo "Errore durante l'inserimento della nuova circolare: " . $conn->error;
         }
 
-			// Se non sono state aggiunte circolari, mi mostra un messaggio con l'ultima uscita
-			 if (empty($circolari_aggiunte)) {
-						$last_circular = reset($circolare);
-						echo "Nessuna nuova circolare.<br>L'ultima rimane la numero: <b>" . $last_circular["numero"] . "</b>";
-					}
-			file_put_contents('circolari.txt', json_encode($circolare));
-		}
-	}
+        // Invia il messaggio a tutti gli utenti
+        $message = "<b>Nuova circolare</b> 📑:"
+            . "\n<b>Numero</b>: " . $c['numero']
+            . "\n\n<b>Descrizione</b>: " . $c['descrizione']
+            . "\n\n<b>Data</b>: " . $c['data'];
 
+        $sql = "SELECT chatID FROM utenti";
+        $result = $conn->query($sql);
 
-?>
+        if ($result->num_rows > 0) {
+            $chatIDs = array();
+            while ($row = $result->fetch_assoc()) {
+                $chatIDs[] = $row['chatID'];
+            }
+
+            // Invia il messaggio a tutti gli utenti
+            $botToken = "6670254948:AAHiCPDQbLjKxML6QzTMDHGy3kE67LwKCYA";
+            $website = "https://api.telegram.org/bot" . $botToken;
+
+            // Invia il documento PDF
+            $path_to_pdf = "circolari/Circolare - " . $c["numero"] . ".pdf"; // Percorso al file PDF
+
+            foreach ($chatIDs as $chatID) {
+                $curl = curl_init();
+                curl_setopt_array($curl, array(
+                    CURLOPT_URL => $website . "/sendDocument",
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => array(
+                        "chat_id" => $chatID,
+                        "document" => new CURLFile($path_to_pdf),
+                        "caption" => $message,
+                        "parse_mode" => "HTML"
+                    ),
+                    CURLOPT_RETURNTRANSFER => true
+                ));
+
+                $response = curl_exec($curl);
+
+                if ($response === false) {
+                    echo "Errore nell'invio del messaggio: " . curl_error($curl);
+                }
+
+                curl_close($curl);
+            }
+            $nrpersone++;
+        }
+    }
+
+    echo "Messaggio inviato a: " . $nrpersone . " persone!";
+} else {
+    // Nessuna nuova circolare, mostra un messaggio sulla pagina web
+    $last_circular = reset($circolare);
+    echo "Nessuna nuova circolare.<br>L'ultima circolare rimane la numero: <b>" . $last_circular["numero"] . "</b>";
+    $conn->close();
+}

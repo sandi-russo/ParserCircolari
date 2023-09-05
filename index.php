@@ -9,7 +9,7 @@ include_once('simple_html_dom.php');
 // ESTRAZIONE E SALVATAGGIO DATI IN UN ARRAY
 
 // URL del sito web da controllare
-$url = "http://veronatrento.it/circolari-diurno-a-s-2022-23";
+$url = "https://veronatrento.it/circolari-diurno-a-s-2023-24";
 
 // Analizzo l'URL per poter estrarre il suo schema
 $url_parsed = parse_url($url);
@@ -21,7 +21,7 @@ $domain = $url_parsed['scheme'] . '://' . $url_parsed['host'];
 $html = file_get_html($url);
 
 // 'div' che contiene l'id della tabella
-$div = $html->find("#attachmentsList_com_content_article_1640", 0);
+$div = $html->find("#attachmentsList_com_content_article_1719", 0);
 
 // All'interno del div cerco il tag 'table', in questo caso seleziono la prima tabela
 $table = $div->find('table', 0);
@@ -38,11 +38,14 @@ foreach ($table->find('tr') as $row) {
         // Nella cella '0' estrae il nummero ('Circolare 1')
         $number = $cells[0]->plaintext;
 
-        // Trasforma  il testo in maiuscolo 
-        $number = str_ireplace('circolare', '', $number);
 
-        // Rimuovo tutti gli spazi
-        $number = str_ireplace(' ', '', $number);
+        // Rimuove tutti i caratteri non numerici
+        $number = preg_replace('/\D/', '', $number);
+
+        // Controlla se la stringa contiene la parola "bis"
+        if (stripos($cells[0]->plaintext, "bis") !== false) {
+            $number .= " bis";
+        }
 
         // Collego il dominio estratto 'http://veronatrento.it', alla cella '0' che contiene 'href'
         $link = $domain . $cells[0]->find('a', 0)->href;
@@ -95,28 +98,27 @@ foreach ($table->find('tr') as $row) {
     }
 }
 
-        /*foreach ($circolare as $c) {
+/*foreach ($circolare as $c) {
             echo "Numero: " . $c['numero'] 
             . "Descrizione: " . $c['descrizione']
             . "Data: " . $c['data']
             . "Link: " . $c['link']
             . "<br><br>";
         }*/
-			// Controllo se esiste la cartella 'circolari'
-			if (!file_exists('circolari')) {
-				mkdir('circolari', 0777, true);
-			}
+// Controllo se esiste la cartella 'circolari'
+if (!file_exists('circolari')) {
+    mkdir('circolari', 0777, true);
+}
 
-			foreach ($circolare as $c) {
+foreach ($circolare as $c) {
 
-				// Creo un nome file univoco utilizzando il numero della circolare
-				$filename = 'Circolare - ' . $c['numero'] . '.pdf';
+    // Creo un nome file univoco utilizzando il numero della circolare
+    $filename = 'Circolare - ' . $c['numero'] . '.pdf';
 
-				// Verifica se il file esiste già nella cartella 'circolari'
-				if (!file_exists('circolari/' . $filename)) {
+    // Verifica se il file esiste già nella cartella 'circolari'
+    if (!file_exists('circolari/' . $filename)) {
 
-					// Scarica il file PDF dal link e lo salva nella cartella 'circolari'
-					file_put_contents('circolari/' . $filename, file_get_contents($c['link']));
-				}
-			}
-?>
+        // Scarica il file PDF dal link e lo salva nella cartella 'circolari'
+        file_put_contents('circolari/' . $filename, file_get_contents($c['link']));
+    }
+}
