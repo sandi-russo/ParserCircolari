@@ -135,7 +135,7 @@ if (substr($message, 0, 1) === '/' || isset($keyboardButtons[$message])) {
                 "<b>INFORMAZIONI BOT</b>:"
                     . "\nQuesto BOT invia automaticamente un messaggio contenente le informazioni sulle circolari uscite."
                     . "\nDescrizione: BOT del Verona Trento"
-                    . "\nVersione: 1.3",
+                    . "\nVersione: 1.1",
                 $encoded_keyboard
             );
             break;
