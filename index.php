@@ -4,6 +4,7 @@
 
 // Libreria per estrarmi le informazioni da una pagina web
 include_once('simple_html_dom.php');
+header('Access-Control-Allow-Origin: *');
 
 
 // ESTRAZIONE E SALVATAGGIO DATI IN UN ARRAY
@@ -93,10 +94,14 @@ foreach ($table->find('tr') as $row) {
                     "descrizione" => $description,
                     "data" => $date
                 );
+
+               
             }
         }
     }
 }
+
+
 
 /*foreach ($circolare as $c) {
             echo "Numero: " . $c['numero'] 

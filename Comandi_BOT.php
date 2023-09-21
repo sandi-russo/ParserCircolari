@@ -92,17 +92,19 @@ mysqli_close($conn);
 
 $keyboardButtons = [
     "Avvia 🚀" => '/start',
-    "Informazioni BOT 🤖" => '/info',
     "Elenco Circolari 📚" => '/circolari',
-    "Elenco Comandi 📝" => '/comandi',
+    "Sito Web 🌍" => '/sitoweb',
     "Orario 🕗" => '/orario',
+    "Elenco Comandi 📝" => '/comandi',
+    "Informazioni BOT 🤖" => '/info',
     "Esci ❌" => '/esci'
 ];
 
 $keyboard = [
     "keyboard" => [
-        ["Elenco Circolari 📚", "Elenco Comandi 📝"],
-        ["Informazioni BOT 🤖", "Orario 🕗",],
+        ["Elenco Circolari 📚", "Sito Web 🌍"],
+        ["Orario 🕗", "Informazioni BOT 🤖",],
+        ["Elenco Comandi 📝"],
         ["Esci ❌"]
     ],
     "resize_keyboard" => true,
@@ -133,9 +135,9 @@ if (substr($message, 0, 1) === '/' || isset($keyboardButtons[$message])) {
             InviaMessaggio(
                 $chatID,
                 "<b>INFORMAZIONI BOT</b>:"
-                    . "\nQuesto BOT invia automaticamente un messaggio contenente le informazioni sulle circolari uscite."
-                    . "\nDescrizione: BOT del Verona Trento"
-                    . "\nVersione: 1.1",
+                    . "\n🌟 Il nostro Bot è qui per tenerti aggiornato sull'orario scolastico e per inviarti automaticamente le circolari più importanti. Siamo il Bot ufficiale del Verona Trento."
+                    . "\n\n🔄 Con la versione 1.2, abbiamo reso il Bot più efficiente e user-friendly per migliorare la tua esperienza."
+                    . "\n\n🚀 Ma non finisce qui! Stiamo lavorando duramente per portarti nuove funzionalità esclusive, tra cui la personalizzazione dell'orario e l'integrazione completa con le potenti API di Google.",
                 $encoded_keyboard
             );
             break;
@@ -155,8 +157,10 @@ if (substr($message, 0, 1) === '/' || isset($keyboardButtons[$message])) {
                 $chatID,
                 "<b>ELENCO COMANDI</b>:"
                     . "\n/start - Avvia il BOT"
-                    . "\n/info - Informazioni generali sul BOT"
                     . "\n/circolari - Elenco PDF di tutte le circolari"
+                    . "\n/info - Informazioni generali sul BOT"
+                    . "\n/orario - WebApp per visualizzare l'orario scolastico"
+                    . "\n/sitoweb - Elenco PDF di tutte le circolari"
                     . "\n/comandi - Lista comandi",
                 $encoded_keyboard
             );
@@ -175,7 +179,7 @@ if (substr($message, 0, 1) === '/' || isset($keyboardButtons[$message])) {
         case '/orario':
             $inline_keyboard = [
                 [
-                    ['text' => 'Visualizza Orario', 'url' => 'https://vt2020.myqnapcloud.com:8081/orario/']
+                    ['text' => 'Visualizza Orario', 'url' => 'https://t.me/VERONATRENTOBOT/Orario']
                 ]
             ];
             $encoded_inline_keyboard = json_encode(['inline_keyboard' => $inline_keyboard]);
@@ -185,6 +189,27 @@ if (substr($message, 0, 1) === '/' || isset($keyboardButtons[$message])) {
                 $encoded_inline_keyboard
             );
             break;
+
+
+            case '/sitoweb':
+                // URL della pagina web che desideri aprire nel browser di Telegram
+                $webpageURL = 'circolari.veronatrento.it';
+            
+                // Crea un messaggio di tipo "inline keyboard" con un pulsante che apre la pagina web
+                $inline_keyboard = [
+                    [
+                        ['text' => 'Visualizza Sito Web', 'url' => $webpageURL]
+                    ]
+                ];
+                $encoded_inline_keyboard = json_encode(['inline_keyboard' => $inline_keyboard]);
+            
+                // Invia il messaggio con il link alla pagina web
+                InviaMessaggio(
+                    $chatID,
+                    "Clicca sul pulsante '<b>Visualizza Sito Web</b>' per aprire il sito web delle circolari nella Telegram Web App.",
+                    $encoded_inline_keyboard
+                );
+                break;
 
         default:
             Avvia($keyboard, $encoded_default_keyboard, $chatID);
@@ -203,7 +228,7 @@ function Avvia($keyboard, $encoded_default_keyboard, $chatID)
 {
     $keyboard["keyboard"] = [["Avvia 🚀"]];
     $encoded_default_keyboard = json_encode($keyboard);
-    InviaMessaggio($chatID, "Premi '<b>AVVIA 🚀</b>' per poter utilizzare il BOT!", $encoded_default_keyboard);
+    InviaMessaggio($chatID, "Premi '<b>Avvia 🚀</b>' per poter utilizzare il BOT!", $encoded_default_keyboard);
 }
 
 
