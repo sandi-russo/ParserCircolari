@@ -3,16 +3,6 @@
  
 # VERONA TRENTO BOT
 
-- Added new item on the Reply Markup Keyboard;
-- Added Verona Trento site;
-- improved the "Orario Scolastico" webApp;
-- Improved the response system;
-- Removed unnecessary and repetitive commands;
-- Fixed some bugs;
-
-
-# CircolariParser
-
 **LIBRERIE UTILIZZATE**: 
  - simple_html_dom: una libreria PHP che semplifica l'estrazione di dati da pagine web.
  - TCPDF: una libreria PHP che permette di creare facilmente documenti PDF.
