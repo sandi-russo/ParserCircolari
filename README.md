@@ -1,3 +1,16 @@
+
+![Logo](https://i.postimg.cc/63pf91nv/LOGO-BOT.png)
+ 
+# VERONA TRENTO BOT
+
+- Added new item on the Reply Markup Keyboard;
+- Added Verona Trento site;
+- improved the "Orario Scolastico" webApp;
+- Improved the response system;
+- Removed unnecessary and repetitive commands;
+- Fixed some bugs;
+
+
 # CircolariParser
 
 **LIBRERIE UTILIZZATE**: 
